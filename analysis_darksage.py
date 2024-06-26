@@ -1,7 +1,118 @@
 import numpy as np
 import time
+import astropy.constants as const
+import astropy.units as u
 
 def galdtype_darksage(Nannuli=30):
+    floattype = np.float32
+    Galdesc_full = [
+                    ('Galaxy_Classification'        , np.int32),
+                    ('GalaxyIndex'                  , np.int64),
+                    ('HaloIndex'                    , np.int32),
+                    ('SimulationHaloIndex'          , np.int32),
+                    ('TreeIndex'                    , np.int32),
+                    ('SnapNum'                      , np.int32),
+                    ('CentralGalaxyIndex'           , np.int64),
+                    ('Central_Galaxy_Mvir'          , floattype),
+                    ('mergeType'                    , np.int32),
+                    ('mergeIntoID'                  , np.int32),
+                    ('mergeIntoSnapNum'             , np.int32),
+                    ('dT'                           , floattype),
+                    ('Pos'                          , (floattype, 3)),
+                    ('Vel'                          , (floattype, 3)),
+                    ('halospin'                         , (floattype, 3)),
+                    ('Len'                          , np.int32),
+                    ('LenMax'                       , np.int32),
+                    ('Mvir'                         , floattype),
+                    ('Rvir'                         , floattype),
+                    ('Vvir'                         , floattype),
+                    ('Vmax'                         , floattype),
+                    ('VelDisp'                      , floattype),                # velocity dispersion of dark matter only
+                    ('DiscRadii'                    , (floattype, Nannuli+1)),   # radius of each annulus for every galaxy (every galaxy has 31 radii that pertain to each annulus)
+                    ('Cold_Gas_Mass'                      , floattype),
+                    ('Total_Stellar_Mass'                  , floattype),
+                    ('Mergerdriven_Bulge_Mass'              , floattype),
+                    ('Instabilitydriven_Bulge_Mass'          , floattype),
+                    ('Hot_Gas_Mass'                       , floattype),
+                    ('Ejected_Gas_Mass'                  , floattype),
+                    ('Black_Hole_Mass'                , floattype),
+                    ('IntraCluster_Stars'            , floattype),
+                    ('DiscGas'                      , (floattype, Nannuli)),
+                    ('DiscStars'                    , (floattype, Nannuli)),
+                    ('j_Stellar_Disk'                    , (floattype, 3)),
+                    ('j_Cold_Gas'                      , (floattype, 3)),
+                    ('SpinClassicalBulge'           , (floattype, 3)),
+                    ('StarsInSitu'                  , floattype),
+                    ('StarsInstability'             , floattype),
+                    ('StarsMergeBurst'              , floattype),
+                    ('DiscHI'                       , (floattype, Nannuli)),
+                    ('DiscH2'                       , (floattype, Nannuli)),
+                    ('DiscSFR'                      , (floattype, Nannuli)),
+                    ('Metals_Cold_Gas'                , floattype),
+                    ('Metals_Stellar_Mass'            , floattype),
+                    ('Classical_Metals_Bulge_Mass'     , floattype),
+                    ('Secular_Metals_Bulge_Mass'       , floattype),
+                    ('Metals_Hot_Gas'                 , floattype),
+                    ('Metals_Ejected_Mass'            , floattype),
+                    ('Metals_IntraCluster_Stars'      , floattype),
+                    ('DiscGasMetals'                , (floattype, Nannuli)),
+                    ('DiscStarsMetals'              , (floattype, Nannuli)),
+                    ('SfrFromH2'                    , floattype),
+                    ('SfrInstab'                    , floattype),
+                    ('SfrMergeBurst'                , floattype),
+                    ('SfrDiskZ'                     , floattype),
+                    ('SfrBulgeZ'                    , floattype),
+                    ('Disk_Scale_Radius'              , floattype),
+                    ('Cool_Scale_Radius'              , floattype),
+                    ('Stellar_Disc_Scale_Radius'       , floattype),
+                    ('Cooling'                      , floattype),
+                    ('Heating'                      , floattype),
+                    ('QuasarEnergy'                      , floattype),
+                    ('BHaccreted'                       , floattype),
+                    ('BondiBHaccreted'                       , floattype),
+                    ('RadioBHaccreted'                      , floattype),
+                    ('QuasarBHaccreted'                      , floattype),
+                    ('InstaBHaccreted'                      , floattype),
+                    ('MergerBHaccreted'                      , floattype),
+                    ('RadioBlackHoleMass'                      , floattype),
+                    ('QuasarBlackHoleMass'                      , floattype),
+                    ('InstaBlackHoleMass'                      , floattype),
+                    ('MergerBlackHoleMass'                      , floattype),
+                    ('TimeofFirstAccretionRadio'    ,  floattype),
+                    ('TimeofLastAccretionRadio'    ,  floattype),
+                    ('TimeofFirstAccretionQuasar'    ,  floattype),
+                    ('TimeofLastAccretionQuasar'    ,  floattype),
+                    ('TimeofFirstAccretionInsta'    ,  floattype),
+                    ('TimeofLastAccretionInsta'    ,  floattype),
+                    ('TimeofFirstAccretionMerger'    ,  floattype),
+                    ('TimeofLastAccretionMerger'    ,  floattype),
+                    ('Last_Major_Merger'              , floattype),
+                    ('Last_Minor_Merger'              , floattype),
+                    ('OutflowRate'                  , floattype),
+                    ('Subhalo_Mvir_at_Infall'                   , floattype),
+                    ('Subhalo_Vvir_at_Infall'                   , floattype),
+                    ('Subhalo_Vmax_at_Infall'                   , floattype)
+                    ]
+    names = [Galdesc_full[i][0] for i in range(len(Galdesc_full))]
+    formats = [Galdesc_full[i][1] for i in range(len(Galdesc_full))]
+    Galdesc = np.dtype({'names':names, 'formats':formats}, align=True)
+    return Galdesc
+
+"""
+field = [ 'Galaxy_Classification', 'GalaxyIndex', 'HaloIndex', 'Pos', 'Vel', 'Mvir', 'Rvir',
+    'Vvir', 'Vmax', 'Central_Galaxy_Mvir', 'VelDisp', 'DiscRadii', 'Cold_Gas_Mass', 'Total_Stellar_Mass',
+    'Mergerdriven_Bulge_Mass', 'Instabilitydriven_Bulge_Mass', 'Hot_Gas_Mass', 'Ejected_Gas_Mass',
+    'Black_Hole_Mass', 'j_Stellar_Disk', 'j_Cold_Gas', 'DiscStars', 'DiscHI',
+    'DiscH2', 'DiscSFR', 'SfrFromH2', 'SfrInstab', 'SfrMergeBurst', 'Disk_Scale_Radius', 'Cool_Scale_Radius',
+    'Cooling', 'Heating', 'QuasarEnergy', 'BHaccreted', 'BondiBHaccreted', 'RadioBHaccreted', 'QuasarBHaccreted', 'InstaBHaccreted',
+    'MergerBHaccreted','RadioBlackHoleMass', 'QuasarBlackHoleMass', 'InstaBlackHoleMass', 'MergerBlackHoleMass',
+    'TimeofFirstAccretionRadio', 'TimeofLastAccretionRadio', 'TimeofFirstAccretionQuasar', 'TimeofLastAccretionQuasar',
+    'TimeofFirstAccretionInsta', 'TimeofLastAccretionInsta', 'TimeofFirstAccretionMerger', 'TimeofLastAccretionMerger',
+    'Last_Major_Merger', 'Last_Minor_Merger', 'OutflowRate', 'Subhalo_Mvir_at_Infall', 'Subhalo_Vvir_at_Infall',
+    'Subhalo_Vmax_at_Infall', 'SnapNum' ]
+"""
+
+def galdtype_darksage_old(Nannuli=30):
     floattype = np.float32
     Galdesc_full = [
                     ('Galaxy_Classification'                         , np.int32),
@@ -160,7 +271,7 @@ def param_dicts(sample, data ):
     Black_Hole_Mass
     """
 
-    h = 0.73
+    h = 0.7
     gal = galaxy_sample( sample, data )
     Vvir = gal.Vvir   
     Rvir = gal.Rvir
@@ -213,6 +324,7 @@ def param_dicts(sample, data ):
 
 
     # Taking the log10 of these values
+    gal['logSFR'] = np.log10( gal.Total_Star_Formation_Rate )
     gal['logsSFR'] = np.log10( gal.Total_Star_Formation_Rate / gal.Total_Stellar_Mass) 
     # this is to have all logsSFR values less than -12 to just be -12.0
     gal.loc[( gal.logsSFR < -12.0 ), 'logsSFR'] = -12.0    
@@ -235,8 +347,12 @@ def param_dicts(sample, data ):
     logTSMvir = np.log10( gal.Total_Stellar_Mass / 
         gal.Mvir )
 
+    # Accretion rate
+    gal['logBHL'] = np.log10( (0.1*gal.BHaccreted.to_numpy()*u.Msun/u.yr *const.c**2).to(u.erg/u.s).value )
+    #gal.loc[( gal.BHaccreted == 0.0 ), 'logBHL'] = 1e-7
+
     # Black hole mass
-    gal.loc[( gal.Black_Hole_Mass == 0.0 ), 'Black_Hole_Mass'] = 1e-7
+    #gal.loc[( gal.Black_Hole_Mass == 0.0 ), 'Black_Hole_Mass'] = 1e-7
 
     gal.Black_Hole_Mass = 1e10 * gal.Black_Hole_Mass / h
     gal['logBHM'] = np.log10( gal.Black_Hole_Mass )
